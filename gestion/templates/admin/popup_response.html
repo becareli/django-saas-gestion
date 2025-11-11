@@ -1,0 +1,20 @@
+{% load i18n %}
+<script>
+    try {
+        // Obtener la data del objeto recién creado (ID y representación en string)
+        var initData = JSON.parse('{{ init_data|safe }}');
+        
+        var newId = initData.value;
+        var newRepr = initData.label; 
+        
+        // Encontrar la ventana que abrió este popup
+        var win = window.opener || window.parent || window; 
+        
+        // Llamar a la función definida en proyecto_form.html
+        win.dismissAddAnotherPopup(win, newId, newRepr);
+
+    } catch (e) {
+        // En caso de error, intenta cerrar el popup para evitar que quede en blanco.
+        window.close();
+    }
+</script>

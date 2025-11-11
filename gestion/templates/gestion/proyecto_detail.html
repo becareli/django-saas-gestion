@@ -1,0 +1,70 @@
+{% extends "gestion/base.html" %}
+
+{% block title %}Detalle del Proyecto{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h1 class="page-header">
+            <i class="fas fa-search"></i> Detalles del Proyecto: {{ proyecto.nombre }}
+        </h1>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Información General</h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">ID</dt>
+                    <dd class="col-sm-9">{{ proyecto.pk }}</dd>
+
+                    <dt class="col-sm-3">Nombre</dt>
+                    <dd class="col-sm-9">{{ proyecto.nombre }}</dd>
+
+                    <dt class="col-sm-3">Descripción</dt>
+                    <dd class="col-sm-9">{{ proyecto.descripcion|default:"No hay descripción disponible." }}</dd>
+
+                    <dt class="col-sm-3">Cliente</dt>
+                    <dd class="col-sm-9">{{ proyecto.cliente.nombre }}</dd>
+
+                    <dt class="col-sm-3">Tipo de Vivienda</dt>
+                    <dd class="col-sm-9">{{ proyecto.tipo.nombre }}</dd>
+
+                    <dt class="col-sm-3">Fecha de Inicio</dt>
+                    <dd class="col-sm-9">{{ proyecto.fecha_inicio|date:"d M Y" }}</dd>
+                </dl>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Sistemas Energéticos Aplicados</h4>
+            </div>
+            <div class="card-body">
+                {% if proyecto.sistemas.all %}
+                <ul>
+                    {% for sistema in proyecto.sistemas.all %}
+                        <li><i class="fas fa-check-circle text-success"></i> {{ sistema.nombre }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No se han registrado sistemas energéticos para este proyecto.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="{% url 'proyecto-editar' proyecto.pk %}" class="btn btn-warning me-2">
+                <i class="fas fa-edit"></i> Editar Proyecto
+            </a>
+            <a href="{% url 'proyecto-eliminar' proyecto.pk %}" class="btn btn-danger me-2">
+                <i class="fas fa-trash"></i> Eliminar Proyecto
+            </a>
+            <a href="{% url 'proyecto-list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Listado
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

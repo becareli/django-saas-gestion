@@ -1,0 +1,48 @@
+# Ignorar dependencias locales y archivos de configuración
+
+# Entorno Virtual
+# Ignorar la carpeta del entorno virtual que creamos (venv)
+venv/
+.venv/
+
+# Archivos de Python
+# Archivos de caché
+__pycache__/
+*.pyc
+*.pyd
+*.so
+
+# Paquetes de distribución (si se construye el proyecto)
+dist/
+build/
+*.egg-info/
+
+# Base de datos local (SQLite) y Logs
+# La base de datos local db.sqlite3 no debe ser versionada
+db.sqlite3
+
+# Archivos de log
+*.log
+
+# Archivos de configuración de Django
+# Archivos de configuración que contienen claves sensibles (settings.pyc o similares)
+*.conf
+*.ini
+*.env
+.env
+.flaskenv
+
+# Archivos sensibles (IDE/Editor)
+# Ignorar archivos temporales y de configuración del editor (ej. VS Code)
+.vscode/
+.idea/
+*.swp
+*~
+
+# Directorios de Archivos Estáticos y Media (para producción)
+# Aunque tu STATIC_ROOT no está definido, es buena práctica ignorar
+# la carpeta donde Django recolecta estáticos (si se usa).
+# staticfiles/ 
+
+# Directorios de almacenamiento de archivos multimedia subidos por el usuario
+# media/

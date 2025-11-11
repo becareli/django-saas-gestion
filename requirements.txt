@@ -1,0 +1,8 @@
+# requirements.txt
+
+# Framework principal del proyecto
+Django~=5.0
+
+# Librerías para estilizar los formularios con Bootstrap
+django-crispy-forms~=2.1
+crispy-bootstrap5~=2024.1

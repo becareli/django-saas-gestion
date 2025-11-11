@@ -1,0 +1,30 @@
+{% extends "gestion/base.html" %}
+
+{% block title %}Eliminar Proyecto{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h1 class="page-header text-danger">
+            <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+        </h1>
+        
+        <div class="alert alert-danger" role="alert">
+            <p>Estás a punto de eliminar permanentemente el siguiente proyecto:</p>
+            <h4 class="alert-heading">{{ proyecto.nombre }} (ID: {{ proyecto.pk }})</h4>
+            <p><strong>Esta acción no se puede deshacer.</strong></p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <button type="submit" class="btn btn-danger btn-lg me-2">
+                <i class="fas fa-trash-alt"></i> Sí, Eliminar Permanentemente
+            </button>
+            <a href="{% url 'proyecto-detalle' proyecto.pk %}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times-circle"></i> Cancelar
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}
