@@ -1,8 +1,3 @@
-¡Excelente decisión\! El archivo `README.md` es la cara de tu proyecto y debe destacar cómo has cumplido con todos los requisitos del Módulo 7.
-
-Aquí tienes un **`README.md`** profesional y detallado, que cumple con el **Requisito 1** de documentar la ejecución, la base de datos y las migraciones, además de presentar tus logros técnicos (CRUD, ORM, Modelos, Admin).
-
------
 
 # 🏢 Portafolio Full Stack | SAAS Calificación Energética de Viviendas (CEV)
 
