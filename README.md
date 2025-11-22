@@ -3,7 +3,8 @@
 
 Aplicación web desarrollada en **Django** para gestionar el proceso completo de **Calificación Energética de Viviendas (CEV)**: registro de proyectos, gestión de clientes, materiales, sistemas de climatización, envolventes térmicas y resultados de certificación.
 
----
+
+
 
 ## 🎯 Propósito del Sistema
 
@@ -271,3 +272,11 @@ Proyecto desarrollado como parte del **Módulo M8 – Proyecto Final Talento Dig
 **Versión:** 1.0.0
 
 
+<<<<<<< HEAD
+=======
+  * `gestion/models.py`: Modelos con las relaciones complejas (Req. 2 y 3).
+  * `gestion/views.py`: Lógica CRUD y Consulta ORM (`ProyectoListView` - Req. 5 y 6).
+  * `gestion/admin.py`: Configuración del panel de administración (Req. 7).
+  * `requirements.txt`: Lista de dependencias del proyecto.
+  * `.gitignore`: Asegura que `db.sqlite3` y `venv/` no se suban al repositorio.
+>>>>>>> 2f3fe97a51806ce7124469df65c3633721b685fa
