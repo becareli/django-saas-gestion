@@ -1,30 +1,211 @@
 {% extends "gestion/base.html" %}
 
-{% block title %}Eliminar Proyecto{% endblock %}
+{% block title %}Eliminar Proyecto - {{ proyecto.nombre }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <h1 class="page-header text-danger">
-            <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
-        </h1>
-        
-        <div class="alert alert-danger" role="alert">
-            <p>Estás a punto de eliminar permanentemente el siguiente proyecto:</p>
-            <h4 class="alert-heading">{{ proyecto.nombre }} (ID: {{ proyecto.pk }})</h4>
-            <p><strong>Esta acción no se puede deshacer.</strong></p>
-        </div>
 
-        <form method="post">
-            {% csrf_token %}
-            
-            <button type="submit" class="btn btn-danger btn-lg me-2">
-                <i class="fas fa-trash-alt"></i> Sí, Eliminar Permanentemente
-            </button>
-            <a href="{% url 'proyecto-detalle' proyecto.pk %}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times-circle"></i> Cancelar
-            </a>
-        </form>
+<!-- ENCABEZADO DE ADVERTENCIA -->
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <div class="alert alert-danger shadow-lg" role="alert" style="border-left: 5px solid #e74c3c;">
+            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+            <h2 class="alert-heading">¡ADVERTENCIA!</h2>
+            <p class="lead mb-0">Estás a punto de eliminar un proyecto permanentemente</p>
+        </div>
     </div>
 </div>
+
+<!-- TARJETA DE CONFIRMACIÓN -->
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card border-danger shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-trash-alt"></i> Confirmar Eliminación
+                </h4>
+            </div>
+            <div class="card-body">
+                
+                <!-- INFORMACIÓN DEL PROYECTO A ELIMINAR -->
+                <div class="alert alert-light border" role="alert">
+                    <h5 class="alert-heading text-danger">
+                        <i class="fas fa-folder-open"></i> Proyecto a Eliminar
+                    </h5>
+                    <hr>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Nombre:</dt>
+                        <dd class="col-sm-8"><strong>{{ proyecto.nombre }}</strong></dd>
+
+                        <dt class="col-sm-4">ID:</dt>
+                        <dd class="col-sm-8">#{{ proyecto.pk }}</dd>
+
+                        <dt class="col-sm-4">Cliente:</dt>
+                        <dd class="col-sm-8">{{ proyecto.cliente.nombre }}</dd>
+
+                        <dt class="col-sm-4">Tipo:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-secondary">{{ proyecto.tipo.nombre }}</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Fecha de Inicio:</dt>
+                        <dd class="col-sm-8">{{ proyecto.fecha_inicio|date:"d/m/Y" }}</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{{ proyecto.get_badge_class }}">
+                                {{ proyecto.get_estado_display }}
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+
+                <!-- ADVERTENCIA SOBRE LOS DATOS QUE SE ELIMINARÁN -->
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle"></i> Se eliminarán los siguientes datos relacionados:
+                    </h6>
+                    <ul class="mb-0">
+                        {% if proyecto.muros.count > 0 %}
+                            <li><strong>{{ proyecto.muros.count }}</strong> muro(s) registrado(s)</li>
+                        {% endif %}
+                        {% if proyecto.sistemas.count > 0 %}
+                            <li><strong>{{ proyecto.sistemas.count }}</strong> sistema(s) de climatización asociado(s)</li>
+                        {% endif %}
+                        {% if proyecto.resultados %}
+                            <li><strong>1</strong> resultado de calificación energética ({{ proyecto.resultados.calificacion }})</li>
+                        {% endif %}
+                        <li>Toda la información asociada a este proyecto</li>
+                    </ul>
+                </div>
+
+                <!-- MENSAJE CRÍTICO -->
+                <div class="alert alert-danger mb-4" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <strong>Esta acción NO se puede deshacer.</strong> 
+                    Todos los datos del proyecto se eliminarán permanentemente de la base de datos.
+                </div>
+
+                <!-- FORMULARIO DE CONFIRMACIÓN -->
+                <form method="post" id="deleteForm">
+                    {% csrf_token %}
+                    
+                    <!-- Checkbox de confirmación -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                        <label class="form-check-label" for="confirmDelete">
+                            <strong>Confirmo que deseo eliminar permanentemente este proyecto y todos sus datos relacionados</strong>
+                        </label>
+                    </div>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button type="submit" class="btn btn-danger btn-lg" id="btnEliminar" disabled>
+                            <i class="fas fa-trash-alt"></i> Sí, Eliminar Permanentemente
+                        </button>
+                        <a href="{% url 'proyecto-detalle' proyecto.pk %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> No, Cancelar y Volver
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- ALTERNATIVA A LA ELIMINACIÓN -->
+        <div class="card mt-4 border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb"></i> ¿Consideras otra opción?
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">En lugar de eliminar el proyecto, podrías:</p>
+                <ul class="mb-3">
+                    <li>Editarlo y actualizar su información</li>
+                    <li>Archivar los datos para consulta futura</li>
+                    <li>Exportar el proyecto a PDF antes de eliminarlo</li>
+                </ul>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{% url 'proyecto-editar' proyecto.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar Proyecto
+                    </a>
+                    <a href="{% url 'proyecto-pdf' proyecto.pk %}" class="btn btn-success">
+                        <i class="fas fa-file-pdf"></i> Exportar a PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Animación de advertencia */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .alert-danger:first-child {
+        animation: pulse 2s infinite;
+    }
+
+    /* Estilo para el botón deshabilitado */
+    #btnEliminar:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Efecto hover para el checkbox */
+    .form-check-input:hover {
+        cursor: pointer;
+        transform: scale(1.1);
+    }
+
+    /* Estilo para las tarjetas */
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        border-bottom: 3px solid rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Habilitar/deshabilitar botón de eliminar según el checkbox
+        $('#confirmDelete').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#btnEliminar').prop('disabled', false);
+                $('#btnEliminar').removeClass('btn-secondary').addClass('btn-danger');
+            } else {
+                $('#btnEliminar').prop('disabled', true);
+                $('#btnEliminar').removeClass('btn-danger').addClass('btn-secondary');
+            }
+        });
+
+        // Confirmación adicional al enviar el formulario
+        $('#deleteForm').on('submit', function(e) {
+            var projectName = "{{ proyecto.nombre }}";
+            
+            if (!confirm('⚠️ ÚLTIMA CONFIRMACIÓN ⚠️\n\n¿Estás ABSOLUTAMENTE SEGURO de que deseas eliminar el proyecto "' + projectName + '"?\n\nEsta acción NO se puede deshacer.')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Mostrar mensaje de carga
+            $('#btnEliminar').html('<i class="fas fa-spinner fa-spin"></i> Eliminando...').prop('disabled', true);
+        });
+
+        // Efecto de sonido de advertencia (opcional)
+        // Reproduce un sonido de alerta cuando se carga la página
+        console.warn('⚠️ PÁGINA DE ELIMINACIÓN DE PROYECTO ⚠️');
+    });
+</script>
 {% endblock %}

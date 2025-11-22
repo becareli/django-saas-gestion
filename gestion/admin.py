@@ -1,5 +1,6 @@
 # gestion/admin.py
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import (
     Proyecto, 
     Cliente, 
@@ -11,13 +12,16 @@ from .models import (
 )
 
 # ----------------------------------------
-# INLINES (Para gestionar las relaciones dentro del Proyecto) - REQUISITO 7
+# INLINES (Para gestionar las relaciones dentro del Proyecto)
 # ----------------------------------------
 
 class MuroInline(admin.TabularInline):
     """Permite editar los Muros de un Proyecto directamente en el formulario de Proyecto."""
     model = Muro
     extra = 1
+    fields = ('ubicacion', 'superficie', 'material_aislante')
+    autocomplete_fields = ['material_aislante']
+
 
 class ResultadoCEVInline(admin.StackedInline):
     """Permite ver/crear el Resultado CEV (1:1) de un Proyecto."""
@@ -25,18 +29,20 @@ class ResultadoCEVInline(admin.StackedInline):
     max_num = 1
     can_delete = False
     verbose_name_plural = 'Resultado de Calificación Energética'
+    fields = ('calificacion', 'consumo_energia_anual', 'fecha_calificacion')
+
 
 # ----------------------------------------
-# REGISTROS DE MODELOS
+# ADMIN: PROYECTO (Principal)
 # ----------------------------------------
 
 @admin.register(Proyecto)
 class ProyectoAdmin(admin.ModelAdmin):
-    # Requisito 7: Listado y Búsqueda
-    list_display = ('nombre', 'cliente', 'tipo', 'fecha_inicio', 'get_estado_display')
-    list_filter = ('tipo', 'fecha_inicio')
-    search_fields = ('nombre', 'cliente__nombre')
+    list_display = ('nombre', 'cliente', 'tipo', 'fecha_inicio', 'estado_badge', 'calificacion_estimada')
+    list_filter = ('tipo', 'fecha_inicio', 'cliente')
+    search_fields = ('nombre', 'cliente__nombre', 'descripcion')
     date_hierarchy = 'fecha_inicio'
+    filter_horizontal = ('sistemas',)
     
     # Inlines
     inlines = [MuroInline, ResultadoCEVInline]
@@ -48,37 +54,145 @@ class ProyectoAdmin(admin.ModelAdmin):
         }),
         ('Sistemas Instalados (Relación N:M)', {
             'fields': ('sistemas',),
-            'classes': ('collapse',), # Esto hace que se pueda colapsar/expandir
+            'classes': ('collapse',),
         }),
     )
+    
+    # Autocomplete para mejorar la búsqueda
+    autocomplete_fields = ['cliente']
+    
+    def estado_badge(self, obj):
+        """Muestra un badge colorido del estado."""
+        estado = obj.get_estado_display()
+        badge_class = obj.get_badge_class()
+        return format_html(
+            '<span class="badge badge-{}">{}</span>',
+            badge_class,
+            estado
+        )
+    estado_badge.short_description = 'Estado'
+    
+    def calificacion_estimada(self, obj):
+        """Muestra la calificación energética estimada."""
+        calificacion = obj.calcular_calificacion_energetica()
+        badge_class = obj.get_badge_class()
+        return format_html(
+            '<span class="badge badge-{}">{}</span>',
+            badge_class,
+            calificacion
+        )
+    calificacion_estimada.short_description = 'Calificación Estimada'
+
 
 # ----------------------------------------
-# MODELOS BASE (CLAVE para el Pop-up)
+# ADMIN: CLIENTE
 # ----------------------------------------
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
-    """
-    El registro de Cliente es necesario para que el botón '+' aparezca
-    en el formulario de Proyecto (ForeignKey).
-    """
-    list_display = ('nombre', 'contacto')
+    list_display = ('nombre', 'contacto', 'total_proyectos_display')
     search_fields = ('nombre', 'contacto')
+    ordering = ('nombre',)
+    
+    def total_proyectos_display(self, obj):
+        """Muestra el total de proyectos del cliente."""
+        total = obj.total_proyectos()
+        return format_html(
+            '<span style="font-weight: bold; color: #007bff;">{}</span>',
+            total
+        )
+    total_proyectos_display.short_description = 'Total Proyectos'
+
+
+# ----------------------------------------
+# ADMIN: TIPO PROYECTO
+# ----------------------------------------
 
 @admin.register(TipoProyecto)
 class TipoProyectoAdmin(admin.ModelAdmin):
-    # El registro es igualmente clave para el pop-up de TipoProyecto
-    list_display = ('nombre',)
+    list_display = ('nombre', 'total_proyectos')
     search_fields = ('nombre',)
+    
+    def total_proyectos(self, obj):
+        """Cuenta cuántos proyectos tienen este tipo."""
+        return obj.proyecto_set.count()
+    total_proyectos.short_description = 'Proyectos con este tipo'
 
 
 # ----------------------------------------
-# OTROS REGISTROS
+# ADMIN: MATERIAL
 # ----------------------------------------
 
-admin.site.register(Material)
-admin.site.register(SistemaClimatizacion)
+@admin.register(Material)
+class MaterialAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'conductividad', 'total_muros')
+    list_filter = ('conductividad',)
+    search_fields = ('nombre',)
+    ordering = ('conductividad',)
+    
+    def total_muros(self, obj):
+        """Muestra cuántos muros usan este material."""
+        return obj.muros.count()
+    total_muros.short_description = 'Muros que lo usan'
 
-# NOTA: Muro y ResultadoCEV ya están gestionados con Inlines, 
-# por lo que no necesitan un registro de admin.site.register directo, 
-# a menos que quieras acceder a ellos de forma independiente.
+
+# ----------------------------------------
+# ADMIN: SISTEMA CLIMATIZACIÓN
+# ----------------------------------------
+
+@admin.register(SistemaClimatizacion)
+class SistemaClimatizacionAdmin(admin.ModelAdmin):
+    list_display = ('tipo', 'eficiencia_nominal', 'total_proyectos')
+    list_filter = ('eficiencia_nominal',)
+    search_fields = ('tipo',)
+    
+    def total_proyectos(self, obj):
+        """Cuenta en cuántos proyectos está este sistema."""
+        return obj.proyectos.count()
+    total_proyectos.short_description = 'Proyectos que lo usan'
+
+
+# ----------------------------------------
+# ADMIN: RESULTADO CEV
+# ----------------------------------------
+
+@admin.register(ResultadoCEV)
+class ResultadoCEVAdmin(admin.ModelAdmin):
+    list_display = ('proyecto', 'calificacion_badge', 'consumo_energia_anual', 'fecha_calificacion')
+    list_filter = ('calificacion', 'fecha_calificacion')
+    search_fields = ('proyecto__nombre',)
+    date_hierarchy = 'fecha_calificacion'
+    
+    def calificacion_badge(self, obj):
+        """Muestra la calificación con un badge colorido."""
+        badge_class = obj.get_badge_class()
+        return format_html(
+            '<span class="badge badge-{}" style="font-size: 14px; padding: 5px 10px;">{}</span>',
+            badge_class,
+            obj.get_calificacion_display()
+        )
+    calificacion_badge.short_description = 'Calificación'
+
+
+# ----------------------------------------
+# ADMIN: MURO (Opcional - si quieres gestionarlos independientemente)
+# ----------------------------------------
+
+@admin.register(Muro)
+class MuroAdmin(admin.ModelAdmin):
+    list_display = ('proyecto', 'ubicacion', 'superficie', 'material_aislante')
+    list_filter = ('material_aislante', 'ubicacion')
+    search_fields = ('proyecto__nombre', 'ubicacion')
+    autocomplete_fields = ['proyecto', 'material_aislante']
+
+
+# ----------------------------------------
+# PERSONALIZACIÓN DEL ADMIN
+# ----------------------------------------
+
+admin.site.site_header = "Administración SAAS CEV"
+admin.site.site_title = "SAAS CEV Admin"
+admin.site.index_title = "Panel de Control - Calificación Energética de Viviendas"
+
+
+

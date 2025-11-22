@@ -6,97 +6,339 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
+
+<!-- ENCABEZADO -->
+<div class="row mb-4">
+    <div class="col-12">
         <h1 class="page-header">
-            <i class="fas fa-{{ object|yesno:'edit,plus-circle' }}"></i> 
+            <i class="fas fa-{% if object %}edit{% else %}plus-circle{% endif %}"></i> 
             {% if object %}Editar Proyecto: {{ object.nombre }}{% else %}Crear Nuevo Proyecto{% endif %}
         </h1>
-
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="mb-3">
-                <label class="form-label required" for="id_cliente">Cliente*</label>
-                <div class="d-flex align-items-center">
-                    {{ form.cliente }}
-                    <a href="/admin/gestion/cliente/add/?_to_field=id&_popup=1" 
-                       class="add-another-btn btn btn-sm btn-info ms-2" 
-                       title="Añadir nuevo Cliente" 
-                       id="id_cliente">
-                        <i class="fas fa-plus"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label required" for="id_tipo">Tipo*</label>
-                <div class="d-flex align-items-center">
-                    {{ form.tipo }}
-                    <a href="/admin/gestion/tipoproyecto/add/?_to_field=id&_popup=1" 
-                       class="add-another-btn btn btn-sm btn-info ms-2" 
-                       title="Añadir nuevo Tipo de Proyecto" 
-                       id="id_tipo">
-                        <i class="fas fa-plus"></i>
-                    </a>
-                </div>
-            </div>
-
-            {% for field in form %}
-                {% if field.name != 'cliente' and field.name != 'tipo' %}
-                    {{ field|as_crispy_field }} 
-                {% endif %}
-            {% endfor %}
-            
-            <button type="submit" class="btn btn-primary btn-lg mt-3">
-                <i class="fas fa-save"></i> Guardar Proyecto
-            </button>
-            <a href="{% url 'proyecto-list' %}" class="btn btn-secondary btn-lg mt-3">
-                <i class="fas fa-arrow-left"></i> Cancelar
-            </a>
-        </form>
     </div>
 </div>
+
+<!-- FORMULARIO -->
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card shadow-sm">
+            <div class="card-header bg-{% if object %}warning{% else %}success{% endif %} text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt"></i> 
+                    {% if object %}Modificar Información{% else %}Información del Proyecto{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="proyectoForm">
+                    {% csrf_token %}
+                    
+                    <!-- SECCIÓN: DATOS BÁSICOS -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle text-primary"></i> Datos Básicos
+                            </h5>
+                        </div>
+                        
+                        <!-- Nombre del Proyecto -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label required" for="id_nombre">
+                                <i class="fas fa-tag"></i> Nombre del Proyecto*
+                            </label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.nombre.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Ingresa un nombre descriptivo para identificar el proyecto
+                            </small>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label" for="id_descripcion">
+                                <i class="fas fa-align-left"></i> Descripción
+                            </label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.descripcion.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Detalles adicionales del proyecto (opcional)
+                            </small>
+                        </div>
+
+                        <!-- Fecha de Inicio -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required" for="id_fecha_inicio">
+                                <i class="fas fa-calendar-alt"></i> Fecha de Inicio*
+                            </label>
+                            {{ form.fecha_inicio }}
+                            {% if form.fecha_inicio.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.fecha_inicio.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- SECCIÓN: RELACIONES -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-link text-success"></i> Relaciones
+                            </h5>
+                        </div>
+
+                        <!-- Cliente (con botón +) -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required" for="id_cliente">
+                                <i class="fas fa-user"></i> Cliente*
+                            </label>
+                            <div class="input-group">
+                                {{ form.cliente }}
+                                <a href="/admin/gestion/cliente/add/?_to_field=id&_popup=1" 
+                                   class="btn btn-info add-another-btn" 
+                                   title="Añadir nuevo Cliente" 
+                                   id="add_id_cliente">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                            {% if form.cliente.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cliente.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Selecciona el cliente o crea uno nuevo con el botón +
+                            </small>
+                        </div>
+
+                        <!-- Tipo de Proyecto (con botón +) -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required" for="id_tipo">
+                                <i class="fas fa-building"></i> Tipo de Vivienda*
+                            </label>
+                            <div class="input-group">
+                                {{ form.tipo }}
+                                <a href="/admin/gestion/tipoproyecto/add/?_to_field=id&_popup=1" 
+                                   class="btn btn-info add-another-btn" 
+                                   title="Añadir nuevo Tipo de Proyecto" 
+                                   id="add_id_tipo">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                            {% if form.tipo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tipo.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Tipo de edificación (Casa, Departamento, etc.)
+                            </small>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- SECCIÓN: SISTEMAS DE CLIMATIZACIÓN -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-thermometer-half text-warning"></i> Sistemas de Climatización
+                            </h5>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label" for="id_sistemas">
+                                <i class="fas fa-cogs"></i> Sistemas Instalados
+                            </label>
+                            {{ form.sistemas }}
+                            {% if form.sistemas.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.sistemas.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples sistemas
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg btn-custom">
+                                <i class="fas fa-save"></i> 
+                                {% if object %}Actualizar Proyecto{% else %}Crear Proyecto{% endif %}
+                            </button>
+                            <a href="{% url 'proyecto-list' %}" class="btn btn-secondary btn-lg btn-custom">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Nota sobre campos requeridos -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <p class="text-muted text-center mb-0">
+                                <small><i class="fas fa-asterisk text-danger"></i> Los campos marcados con * son obligatorios</small>
+                            </p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN ADICIONAL -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb"></i> Información Útil
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Después de crear el proyecto, podrás agregar <strong>muros y materiales</strong> desde el panel de administración.</li>
+                    <li>La <strong>calificación energética</strong> se calculará automáticamente basándose en los materiales aislantes.</li>
+                    <li>Puedes generar un <strong>reporte PDF</strong> desde la vista de detalle del proyecto.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos para los campos del formulario */
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: #e74c3c;
+    }
+
+    .input-group .btn-info {
+        border-radius: 0 8px 8px 0;
+    }
+
+    #id_sistemas {
+        min-height: 150px;
+    }
+
+    .invalid-feedback {
+        display: block;
+        margin-top: 5px;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script type="text/javascript">
     
-    // 1. Función para abrir la ventana emergente (Estándar)
+    // 1. Función para abrir la ventana emergente (Popup)
     window.showAddAnotherPopup = function(triggeringLink) {
         var href = triggeringLink.href;
-        var name = triggeringLink.id; 
+        var name = triggeringLink.id.replace('add_', ''); 
         
-        var win = window.open(href, name, 'height=500,width=800,resizable=yes,scrollbars=yes');
+        var win = window.open(href, name, 'height=600,width=900,resizable=yes,scrollbars=yes');
         win.focus();
         return false;
     }
 
-    // 2. Función global llamada por el pop-up de Django Admin al guardar un nuevo registro
+    // 2. Función global llamada por el popup de Django Admin al guardar
     window.dismissAddAnotherPopup = function(win, newId, newRepr) {
-        win.close();
-        
-        var id = win.name; // Obtiene el ID del campo (e.g., id_cliente)
-        var $select = $('#' + id); 
+        var name = win.name;
+        var $select = $('#' + name);
 
         if ($select.length) {
-            // 1. Crea la nueva opción y la añade al select
-            var option_id = newId;
-            var $option = $('<option selected></option>').val(option_id).text(newRepr);
+            // Crear nueva opción
+            var $option = $('<option selected></option>').val(newId).text(newRepr);
             $select.append($option);
             
-            // 2. Selecciona el nuevo valor y dispara el evento change
-            $select.val(option_id); 
-            $select.trigger('change'); 
+            // Seleccionar el nuevo valor
+            $select.val(newId);
+            $select.trigger('change');
+            
+            // Mostrar notificación de éxito
+            showSuccessNotification('¡' + newRepr + ' agregado exitosamente!');
         }
+        
+        win.close();
     }
 
-    // 3. Inicialización del evento (¡CRUCIAL! Asigna el click listener)
+    // 3. Función para mostrar notificación de éxito
+    function showSuccessNotification(message) {
+        var notification = $('<div class="alert alert-success alert-dismissible fade show position-fixed" role="alert" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">' +
+            '<i class="fas fa-check-circle"></i> ' + message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+            '</div>');
+        
+        $('body').append(notification);
+        
+        setTimeout(function() {
+            notification.fadeOut(function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+
+    // 4. Inicialización del evento para los botones "+"
     $(document).ready(function() {
         $('.add-another-btn').on('click', function(e) {
             e.preventDefault();
-            var btn = this;
-            window.showAddAnotherPopup(btn);
+            window.showAddAnotherPopup(this);
+        });
+
+        // Agregar clases de Bootstrap a los campos del formulario
+        $('input[type="text"], input[type="date"], textarea, select').addClass('form-control');
+        $('#id_sistemas').addClass('form-select').attr('multiple', 'multiple');
+
+        // Validación del formulario
+        $('#proyectoForm').on('submit', function(e) {
+            var isValid = true;
+            
+            // Validar campos requeridos
+            $(this).find('[required]').each(function() {
+                if (!$(this).val()) {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos obligatorios (*)');
+            }
         });
     });
 
